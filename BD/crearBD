@@ -1,0 +1,14 @@
+-- Database: cifrador
+
+-- DROP DATABASE IF EXISTS cifrador;
+
+CREATE DATABASE cifrador
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'Spanish_Spain.utf8'
+    LC_CTYPE = 'Spanish_Spain.utf8'
+    LOCALE_PROVIDER = 'libc'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;
