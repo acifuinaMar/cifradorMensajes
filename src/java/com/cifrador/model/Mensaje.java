@@ -1,0 +1,39 @@
+package com.cifrador.model;
+
+public class Mensaje {
+    private int idMensaje;
+    private String textoCifrado;
+    private int idUsuario;
+    private int idEstado;
+    private String clavePrivada;
+    public int getIdMensaje() { 
+        return idMensaje; 
+    }
+    public void setIdMensaje(int idMensaje) {
+        this.idMensaje = idMensaje; 
+    }
+    public String getTextoCifrado() {
+        return textoCifrado; 
+    }
+    public void setTextoCifrado(String textoCifrado) {
+        this.textoCifrado = textoCifrado; 
+    }
+    public int getIdUsuario() {
+        return idUsuario; 
+    }
+    public void setIdUsuario(int idUsuario) { 
+        this.idUsuario = idUsuario; 
+    }
+    public int getIdEstado() {
+        return idEstado; 
+    }
+    public void setIdEstado(int idEstado) {
+        this.idEstado = idEstado; 
+    }
+    public String getClavePrivada(){
+        return clavePrivada;
+    }
+    public void setClavePrivada(String clavePrivada){
+        this.clavePrivada = clavePrivada;
+    }
+}

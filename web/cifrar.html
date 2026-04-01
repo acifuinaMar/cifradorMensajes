@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cifrar Mensaje</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="cifrar-box">
+            <h1>Cifrar Nuevo Mensaje</h1>
+            <p class="info-usuario">Estás cifrando como usuario registrado</p>
+            
+            <form action="MensajeServlet" method="POST" class="formulario" id="formCifrar">
+                <div class="campo">
+                    <label for="texto">Mensaje a Cifrar:</label>
+                    <textarea id="texto" name="texto" rows="5" required placeholder="Escribe tu mensaje secreto aquí..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-principal">Cifrar Mensaje</button>
+                <a href="menu.html" class="btn-secundario">Volver al Menú</a>
+            </form>
+            
+            <div id="resultado" style="display:none;" class="resultado-box">
+                <h3>Mensaje Cifrado Correctamente</h3>
+                <p><strong>Token generado:</strong> <span id="tokenGenerado"></span></p>
+                <p><strong>IMPORTANTE:</strong> Guarda este token. Solo podrás descifrar el mensaje con él.</p>
+                <div class="botones-resultado">
+                    <button onclick="copiarToken()" class="btn-copiar">Copiar Token</button>
+                    <a href="menu.html" class="btn-volver-menu">Volver al Menú Principal</a>
+                </div>
+            </div>
+            
+            <div id="error" style="display:none;" class="error-box">
+                <h3>Error al cifrar</h3>
+                <p id="mensajeError"></p>
+                <a href="cifrar.html" class="btn-intentar">Intentar de nuevo</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Manejar respuesta del servlet
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const error = urlParams.get('error');
+        
+        if(token) {
+            document.getElementById('resultado').style.display = 'block';
+            document.querySelector('form').style.display = 'none';
+            document.getElementById('tokenGenerado').textContent = token;
+        } else if(error) {
+            document.getElementById('error').style.display = 'block';
+            document.querySelector('form').style.display = 'none';
+            document.getElementById('mensajeError').textContent = decodeURIComponent(error);
+        }
+        
+        function copiarToken() {
+            const token = document.getElementById('tokenGenerado').textContent;
+            navigator.clipboard.writeText(token);
+            alert('Token copiado al portapapeles');
+        }
+    </script>
+</body>
+</html>

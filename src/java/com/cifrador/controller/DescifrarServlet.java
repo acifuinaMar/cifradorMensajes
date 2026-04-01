@@ -1,0 +1,99 @@
+package com.cifrador.controller;
+
+import com.cifrador.dao.HistorialDAO;
+import com.cifrador.dao.MensajesDAO;
+import com.cifrador.dao.TokenDAO;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.sql.ResultSet;
+import java.security.*;
+import java.security.spec.*;
+import java.util.Base64;
+import javax.crypto.Cipher;
+
+@WebServlet("/DescifrarServlet")
+public class DescifrarServlet extends HttpServlet {
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String tokenIngresado = request.getParameter("token");
+
+        TokenDAO tokenDAO = new TokenDAO();
+        ResultSet rsToken = tokenDAO.buscarToken(tokenIngresado);
+
+        try {
+            if (rsToken != null && rsToken.next()) {
+
+                boolean usado = rsToken.getBoolean("usado");
+                int idMensaje = rsToken.getInt("id_mensaje");
+                MensajesDAO mensajeDAO = new MensajesDAO();
+                ResultSet rsMensaje = mensajeDAO.obtenerPorId(idMensaje);
+                
+                java.sql.Timestamp fechaExp = rsToken.getTimestamp("fecha_expiracion");
+
+                if (fechaExp != null && fechaExp.before(new java.util.Date())) {
+                    mensajeDAO.actualizarEstado(idMensaje, 3);
+                    HistorialDAO historialDAO = new HistorialDAO();
+                    historialDAO.insertar(null, idMensaje, 3);
+                    
+                    response.sendRedirect("descifrar.html?error=" + 
+                        java.net.URLEncoder.encode("Token expirado (caduca a los 7 días)", "UTF-8"));
+                    return;
+                }
+                if (usado) {
+                    HistorialDAO historialDAO = new HistorialDAO();
+                    historialDAO.insertar(null, idMensaje, 3);
+                    
+                    response.sendRedirect("descifrar.html?error=" + 
+                        java.net.URLEncoder.encode("Token ya utilizado, solo se puede usar una vez", "UTF-8"));
+                    return;
+                }
+                if (rsMensaje != null && rsMensaje.next()) {
+                    String textoCifrado = rsMensaje.getString("texto_cifrado");
+                    String clavePrivada = rsMensaje.getString("clave_privada");
+                    byte[] keyBytes = Base64.getDecoder().decode(clavePrivada);
+
+                    KeyFactory kf = KeyFactory.getInstance("RSA");
+                    PrivateKey privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+                    Cipher cipher = Cipher.getInstance("RSA");
+                    cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+                    byte[] textoDescifrado = cipher.doFinal(Base64.getDecoder().decode(textoCifrado));
+                    String resultado = new String(textoDescifrado);
+                    
+                    HistorialDAO historialDAO = new HistorialDAO();
+                    historialDAO.insertar(null, idMensaje, 2);
+                    mensajeDAO.actualizarFechaLectura(idMensaje);
+                    mensajeDAO.actualizarEstado(idMensaje, 2);
+                    tokenDAO.marcarUsadoYFecha(tokenIngresado);
+                    
+                    response.sendRedirect("descifrar.html?mensaje=" + 
+                        java.net.URLEncoder.encode(resultado, "UTF-8"));
+                    return;
+                    
+                } else {
+                    HistorialDAO historialDAO = new HistorialDAO();
+                    historialDAO.insertar(null, null, 3);
+                    
+                    response.sendRedirect("descifrar.html?error=" + 
+                        java.net.URLEncoder.encode("Error al obtener el mensaje", "UTF-8"));
+                    return;
+                }
+            } else {
+                response.sendRedirect("descifrar.html?error=" + 
+                    java.net.URLEncoder.encode("Token no válido. Verifica el código ingresado", "UTF-8"));
+                return;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("descifrar.html?error=" + 
+                java.net.URLEncoder.encode("⚠️ Error al descifrar: " + e.getMessage(), "UTF-8"));
+        }
+    }
+}
